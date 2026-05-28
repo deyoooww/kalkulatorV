@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Kalkulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+        }
+
+        /* FULLSCREEN KALKULATOR */
+        .calculator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 16px 30px;
+        }
+
+        .display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px 16px;
+            background: #000;
+        }
+
+        .expression {
+            color: #8e8e93;
+            font-size: 1.5rem;
+            min-height: 40px;
+            font-family: monospace;
+            text-align: right;
+        }
+
+        .result {
+            color: white;
+            font-size: 4.5rem;
+            font-weight: 500;
+            font-family: monospace;
+            word-break: break-all;
+            text-align: right;
+            line-height: 1.2;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 16px 0 20px;
+        }
+
+        .btn {
+            background: #2c2c2e;
+            border: none;
+            border-radius: 60px;
+            padding: 20px 0;
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+            transition: 0.05s linear;
+            font-family: monospace;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+            background: #3a3a3c;
+        }
+
+        .btn.operator {
+            background: #ff9f0a;
+            color: white;
+        }
+
+        .btn.equal {
+            background: #ff9f0a;
+        }
+
+        .btn.clear {
+            background: #2c2c2e;
+            color: #ff453a;
+        }
+
+        .btn.function {
+            background: #2c2c2e;
+            color: #ff9f0a;
+        }
+
+        /* Panel Rahasia (setelah masukin password 1234) */
+        .secret-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .secret-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .secret-header h2 {
+            color: white;
+            font-size: 2rem;
+        }
+
+        .secret-header p {
+            color: #8e8e93;
+            margin-top: 8px;
+        }
+
+        .secret-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .secret-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .secret-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.02);
+        }
+
+        .secret-item i {
+            font-size: 2.5rem;
+            color: #ff9f0a;
+        }
+
+        .secret-item span {
+            display: block;
+            margin-top: 12px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .close-secret {
+            margin-top: 40px;
+            background: #ff453a;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Modal untuk fitur rahasia */
+        .feature-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+        }
+
+        .feature-header {
+            padding: 20px;
+            background: #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feature-header h3 {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .feature-header button {
+            background: none;
+            border: none;
+            color: #ff453a;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .feature-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Browser */
+        .browser-bar {
+            background: #334155;
+            border-radius: 30px;
+            padding: 10px 16px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .browser-bar input {
+            flex: 1;
+            background: #1e293b;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 30px;
+            color: white;
+        }
+        .browser-bar button {
+            background: #ff9f0a;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+        .webview {
+            background: #0f172a;
+            border-radius: 20px;
+            height: 500px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 16px;
+            background: white;
+        }
+
+        /* Camera */
+        .camera-view {
+            background: #000;
+            border-radius: 30px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        .camera-view button {
+            margin-top: 20px;
+            background: #ff9f0a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+
+        /* Notes */
+        .notes-list {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .note-item {
+            padding: 12px;
+            border-bottom: 1px solid #334155;
+            color: white;
+        }
+        .add-note {
+            background: #ff9f0a;
+            border: none;
+            padding: 12px;
+            border-radius: 30px;
+            margin-top: 16px;
+            font-weight: bold;
+            width: 100%;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 16px;
+            background: #1e293b;
+            border: none;
+            color: white;
+            margin-top: 16px;
+        }
+
+        /* File Manager */
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        .file-item {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+        }
+        .file-item img, .file-item video {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .upload-file {
+            background: #3b82f6;
+            border: none;
+            padding: 12px;
+            border-radius: 30px;
+            color: white;
+            margin-bottom: 16px;
+            width: 100%;
+            font-weight: bold;
+        }
+        .delete-vault {
+            background: #ef4444;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+        .storage-info {
+            margin-top: 16px;
+            font-size: 0.7rem;
+            color: #60a5fa;
+            text-align: center;
+        }
+
+        @media (max-width: 550px) {
+            .btn {
+                padding: 16px 0;
+                font-size: 1.5rem;
+            }
+            .result {
+                font-size: 3rem;
+            }
+            .secret-grid {
+                gap: 15px;
+            }
+            .secret-item {
+                padding: 18px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<!-- FULLSCREEN KALKULATOR -->
+<div class="calculator" id="calculatorApp">
+    <div class="display">
+        <div class="expression" id="calcExpression">0</div>
+        <div class="result" id="calcResult">0</div>
+    </div>
+    <div class="buttons" id="calcButtons"></div>
+</div>
+
+<!-- PANEL RAHASIA (setelah tekan 1234) -->
+<div id="secretPanel" class="secret-panel">
+    <div class="secret-header">
+        <h2><i class="fas fa-lock"></i> Akses Rahasia</h2>
+        <p>Masukkan PIN untuk membuka fitur tersembunyi</p>
+    </div>
+    <div class="secret-grid">
+        <div class="secret-item" data-feature="browser">
+            <i class="fas fa-globe"></i>
+            <span>Browser</span>
+        </div>
+        <div class="secret-item" data-feature="camera">
+            <i class="fas fa-camera"></i>
+            <span>Camera</span>
+        </div>
+        <div class="secret-item" data-feature="notes">
+            <i class="fas fa-pen"></i>
+            <span>Notes</span>
+        </div>
+        <div class="secret-item" data-feature="files">
+            <i class="fas fa-folder"></i>
+            <span>File Manager</span>
+        </div>
+    </div>
+    <button class="close-secret" id="closeSecretBtn">Tutup</button>
+</div>
+
+<!-- BROWSER -->
+<div id="browserModal" class="feature-modal">
+    <div class="feature-header">
+        <h3><i class="fas fa-globe"></i> Browser Rahasia</h3>
+        <button class="close-feature">✕</button>
+    </div>
+    <div class="feature-content">
+        <div class="browser-bar">
+            <input type="text" id="urlInput" placeholder="https://google.com">
+            <button id="goUrl">Go</button>
+        </div>
+        <div class="webview">
+            <iframe id="browserFrame" src="https://www.google.com"></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- CAMERA -->
+<div id="cameraModal" class="feature-modal">
+    <div class="feature-header">
+        <h3><i class="fas fa-camera"></i> Camera Rahasia</h3>
+        <button class="close-feature">✕</button>
+    </div>
+    <div class="feature-content">
+        <div class="camera-view" id="cameraView">
+            <i class="fas fa-camera" style="font-size: 4rem;"></i>
+            <p style="margin-top: 20px;">📸 Kamera Tersembunyi (Simulasi)</p>
+            <button id="takePhotoBtn">Ambil Foto</button>
+            <div id="photoResult" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- NOTES -->
+<div id="notesModal" class="feature-modal">
+    <div class="feature-header">
+        <h3><i class="fas fa-pen"></i> Notes Rahasia</h3>
+        <button class="close-feature">✕</button>
+    </div>
+    <div class="feature-content">
+        <div class="notes-list" id="notesList"></div>
+        <textarea id="newNote" rows="3" placeholder="Tulis catatan rahasia di sini..."></textarea>
+        <button id="addNoteBtn" class="add-note">+ Tambah Catatan</button>
+    </div>
+</div>
+
+<!-- FILE MANAGER / MEDIA VAULT -->
+<div id="filesModal" class="feature-modal">
+    <div class="feature-header">
+        <h3><i class="fas fa-folder"></i> File Manager (Media Vault)</h3>
+        <button class="close-feature">✕</button>
+    </div>
+    <div class="feature-content">
+        <input type="file" id="vaultFileInput" multiple accept="image/*,video/*" style="display:none;">
+        <button id="uploadVaultBtn" class="upload-file"><i class="fas fa-upload"></i> Upload File</button>
+        <div id="vaultGrid" class="file-grid">
+            <div style="text-align:center; color:#64748b; grid-column:1/-1;">Belum ada file</div>
+        </div>
+        <div id="vaultStorageInfo" class="storage-info"></div>
+    </div>
+</div>
+
+<script>
+    // ======================= KALKULATOR FULLSCREEN =======================
+    let currentExpression = '0';
+    let lastResult = null;
+    let waitingForOperand = false;
+    let secretCode = '';
+    const SECRET = '1234';
+
+    const calcExpression = document.getElementById('calcExpression');
+    const calcResult = document.getElementById('calcResult');
+
+    function updateDisplay() {
+        calcExpression.innerText = currentExpression === '0' && !waitingForOperand ? '0' : currentExpression;
+        if (lastResult !== null && !waitingForOperand) {
+            calcResult.innerText = lastResult;
+        } else {
+            calcResult.innerText = currentExpression === '0' ? '0' : currentExpression;
+        }
+    }
+
+    function evaluateExpression() {
+        try {
+            let expr = currentExpression.replace(/×/g, '*').replace(/÷/g, '/');
+            let result = Function('"use strict";return (' + expr + ')')();
+            if (isNaN(result) || !isFinite(result)) throw new Error();
+            result = Math.round(result * 1000000) / 1000000;
+            lastResult = result;
+            currentExpression = result.toString();
+            waitingForOperand = true;
+            updateDisplay();
+        } catch (e) {
+            calcResult.innerText = 'Error';
+            setTimeout(() => resetCalculator(), 800);
+        }
+    }
+
+    function resetCalculator() {
+        currentExpression = '0';
+        lastResult = null;
+        waitingForOperand = false;
+        updateDisplay();
+        secretCode = '';
+    }
+
+    function appendToExpression(value) {
+        if (waitingForOperand) {
+            currentExpression = value;
+            waitingForOperand = false;
+            lastResult = null;
+        } else {
+            if (currentExpression === '0' && value !== '.') {
+                currentExpression = value;
+            } else {
+                currentExpression += value;
+            }
+        }
+        updateDisplay();
+        
+        // Deteksi kode rahasia 1234
+        if (value >= '0' && value <= '9') {
+            secretCode += value;
+            if (secretCode.length > 4) secretCode = secretCode.slice(-4);
+            if (secretCode === SECRET) {
+                document.getElementById('secretPanel').style.display = 'flex';
+                secretCode = '';
+            }
+        }
+    }
+
+    function handleOperator(op) {
+        if (waitingForOperand && lastResult !== null) {
+            currentExpression = lastResult.toString();
+            waitingForOperand = false;
+        }
+        const lastChar = currentExpression.slice(-1);
+        if (['+', '-', '×', '÷', '%'].includes(lastChar)) {
+            currentExpression = currentExpression.slice(0, -1) + op;
+        } else {
+            currentExpression += op;
+        }
+        updateDisplay();
+        secretCode = '';
+    }
+
+    function calculatePercentage() {
+        try {
+            let expr = currentExpression.replace(/×/g, '*').replace(/÷/g, '/');
+            let val = Function('"use strict";return (' + expr + ')')();
+            let percent = val / 100;
+            currentExpression = percent.toString();
+            lastResult = percent;
+            waitingForOperand = true;
+            updateDisplay();
+        } catch(e) { resetCalculator(); }
+        secretCode = '';
+    }
+
+    function initCalculator() {
+        const buttons = ['%','7','8','9','÷','4','5','6','×','1','2','3','-','0','.','=','+','C'];
+        const container = document.getElementById('calcButtons');
+        container.innerHTML = '';
+        buttons.forEach(btn => {
+            const button = document.createElement('button');
+            button.className = 'btn';
+            if (['÷','×','-','+'].includes(btn)) button.classList.add('operator');
+            if (btn === '=') button.classList.add('equal');
+            if (btn === 'C') button.classList.add('clear');
+            if (btn === '%') button.classList.add('function');
+            button.innerText = btn;
+            button.addEventListener('click', () => {
+                if (btn === 'C') resetCalculator();
+                else if (btn === '=') evaluateExpression();
+                else if (btn === '%') calculatePercentage();
+                else if (['÷','×','-','+'].includes(btn)) handleOperator(btn);
+                else appendToExpression(btn);
+            });
+            container.appendChild(button);
+        });
+        updateDisplay();
+    }
+
+    // ======================= PANEL RAHASIA =======================
+    const secretPanel = document.getElementById('secretPanel');
+    const browserModal = document.getElementById('browserModal');
+    const cameraModal = document.getElementById('cameraModal');
+    const notesModal = document.getElementById('notesModal');
+    const filesModal = document.getElementById('filesModal');
+    
+    function closeAllModals() {
+        browserModal.style.display = 'none';
+        cameraModal.style.display = 'none';
+        notesModal.style.display = 'none';
+        filesModal.style.display = 'none';
+    }
+    
+    document.getElementById('closeSecretBtn').addEventListener('click', () => {
+        secretPanel.style.display = 'none';
+    });
+    
+    document.querySelectorAll('.secret-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const feature = item.dataset.feature;
+            secretPanel.style.display = 'none';
+            closeAllModals();
+            if (feature === 'browser') browserModal.style.display = 'flex';
+            if (feature === 'camera') cameraModal.style.display = 'flex';
+            if (feature === 'notes') notesModal.style.display = 'flex';
+            if (feature === 'files') filesModal.style.display = 'flex';
+        });
+    });
+    
+    document.querySelectorAll('.close-feature').forEach(btn => {
+        btn.addEventListener('click', () => {
+            closeAllModals();
+        });
+    });
+    
+    // ======================= BROWSER =======================
+    document.getElementById('goUrl').addEventListener('click', () => {
+        let url = document.getElementById('urlInput').value;
+        if (!url.startsWith('http')) url = 'https://' + url;
+        document.getElementById('browserFrame').src = url;
+    });
+    
+    // ======================= CAMERA =======================
+    document.getElementById('takePhotoBtn').addEventListener('click', () => {
+        const photoDiv = document.getElementById('photoResult');
+        const canvas = document.createElement('canvas');
+        canvas.width = 300;
+        canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(0,0,300,200);
+        ctx.fillStyle = '#ff9f0a';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText('📸 FAKE PHOTO', 80, 100);
+        photoDiv.innerHTML = `<img src="${canvas.toDataURL()}" style="border-radius:16px; width:100%;">`;
+    });
+    
+    // ======================= NOTES =======================
+    let notes = JSON.parse(localStorage.getItem('secret_notes')) || ['📝 Catatan rahasia pertama', '🔒 Simpan data penting di sini'];
+    function renderNotes() {
+        const container = document.getElementById('notesList');
+        container.innerHTML = notes.map(n => `<div class="note-item">${n}</div>`).join('');
+        localStorage.setItem('secret_notes', JSON.stringify(notes));
+    }
+    document.getElementById('addNoteBtn').addEventListener('click', () => {
+        const newNote = document.getElementById('newNote').value.trim();
+        if (newNote) {
+            notes.push(`📝 ${newNote}`);
+            renderNotes();
+            document.getElementById('newNote').value = '';
+        }
+    });
+    renderNotes();
+    
+    // ======================= FILE MANAGER (IndexedDB) =======================
+    const DB_NAME = 'SecretVaultDB';
+    const STORE_NAME = 'vaultFiles';
+    let db = null;
+    
+    function openVaultDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                db = request.result;
+                resolve(db);
+            };
+            request.onupgradeneeded = (event) => {
+                const dbRef = event.target.result;
+                if (!dbRef.objectStoreNames.contains(STORE_NAME)) {
+                    dbRef.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                }
+            };
+        });
+    }
+    
+    async function saveToVault(file, dataUrl) {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const item = { name: file.name, type: file.type, data: dataUrl, timestamp: Date.now(), size: file.size };
+        return new Promise((resolve, reject) => {
+            const request = store.add(item);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject();
+        });
+    }
+    
+    async function getAllVaultFiles() {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => reject();
+        });
+    }
+    
+    async function deleteVaultFile(id) {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject();
+        });
+    }
+    
+    async function renderVault() {
+        const files = await getAllVaultFiles();
+        const grid = document.getElementById('vaultGrid');
+        if (files.length === 0) {
+            grid.innerHTML = '<div style="text-align:center; color:#64748b; grid-column:1/-1;">📭 Belum ada file. Upload foto/video!</div>';
+        } else {
+            grid.innerHTML = files.map(file => `
+                <div class="file-item" data-id="${file.id}">
+                    ${file.type.startsWith('image/') ? `<img src="${file.data}">` : `<video src="${file.data}"></video>`}
+                    <div style="font-size:0.65rem; margin-top:5px;">${file.name.length > 15 ? file.name.slice(0,12)+'...' : file.name}</div>
+                    <button class="delete-vault" data-id="${file.id}">Hapus</button>
+                </div>
+            `).join('');
+        }
+        const totalSize = files.reduce((sum, f) => sum + (f.size || 0), 0);
+        const sizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+        document.getElementById('vaultStorageInfo').innerHTML = `📦 ${files.length} file | ${sizeMB} MB (tersimpan permanen)`;
+        
+        document.querySelectorAll('.delete-vault').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.id);
+                if (confirm('Hapus file ini secara permanen?')) {
+                    await deleteVaultFile(id);
+                    await renderVault();
+                }
+            });
+        });
+    }
+    
+    document.getElementById('uploadVaultBtn').addEventListener('click', () => {
+        document.getElementById('vaultFileInput').click();
+    });
+    
+    document.getElementById('vaultFileInput').addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        for (const file of files) {
+            if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) continue;
+            const reader = new FileReader();
+            await new Promise((resolve) => {
+                reader.onload = async (ev) => {
+                    await saveToVault(file, ev.target.result);
+                    resolve();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        await renderVault();
+        e.target.value = '';
+    });
+    
+    // ======================= INIT =======================
+    async function init() {
+        initCalculator();
+        await openVaultDB();
+        await renderVault();
+    }
+    init();
+</script>
+</body>
+</html>
